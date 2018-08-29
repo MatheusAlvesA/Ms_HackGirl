@@ -1,9 +1,9 @@
 # Inteligencia artificial, Python, para o jogo MS. HACK-MAN (https://booking.riddles.io/competitions/ms.-hack-man)
 # Matheus Alves de Andrade
 
-# Versão 0.0.1
+# Versão 1.0
 # Desenvolvimento iniciado em 20/08/2018
-# Versão finalizada em 20/08/2018
+# Versão finalizada em 29/08/2018
 
 class Campo:
 	'''
@@ -21,7 +21,7 @@ class Campo:
 		'''
 		self.campo = self.formatarCampo(listaCelulas)
 		self.aplicarCheiros()
-		self.debugPrintCampo()
+		#self.debugPrintCampo()
 
 	def debugPrintCampo(self):
 		'''
@@ -59,62 +59,42 @@ class Campo:
 				if(self.campo[i][j]['acessivel']): # Está acessível
 					if('C' in self.campo[i][j]['conteudo'].split(";")): # É um código
 						self.aplicarCheiroBom(5.0, i, j)
-					elif('E' in [x[0] for x in self.campo[i][j]['conteudo'].split(";")]): # É um bug
+					if('E' in [x[0] for x in self.campo[i][j]['conteudo'].split(";")]): # É um bug
 						self.aplicarCheiroRuim(5.0, i, j)
 
-	def aplicarCheiroBom(self, cheiro, x, y, vizitados=None):
-		if(vizitados == None):
-			vizitados = [False for x in range(self.altura*self.largura)]
-		if(vizitados[x*self.altura+y]): # Não deve repetir os já vizitados
-			return;
-		vizitados[x*self.altura+y] = True # Registrando que vizitou
-
-		conteudo = self.campo[x][y]['conteudo'].split(';')
-		if("C" in conteudo):
-			self.campo[x][y]['cheiroBom'] = 5.0
-
+	def aplicarCheiroBom(self, cheiro, x, y):
 		if(cheiro > 0): # Se o cheiro ainda pode ser aplicado
-			if(self.campo[x][y]['cheiroBom']+cheiro < 5):
-				self.campo[x][y]['cheiroBom'] = self.campo[x][y]['cheiroBom'] + cheiro # aplicando cheiro
+			if(self.campo[x][y]['cheiroBom'] < cheiro):
+				self.campo[x][y]['cheiroBom'] = cheiro # aplicando cheiro
 
-			if(x-1 >= 0 and self.campo[x-1][y]['acessivel'] and self.campo[x-1][y]['cheiroBom'] < self.campo[x][y]['cheiroBom']):
-				self.aplicarCheiroBom(cheiro-0.5, x-1, y, vizitados) # Va para cima
+			if(x-1 >= 0 and self.campo[x-1][y]['acessivel']):
+				self.aplicarCheiroBom(cheiro-0.5, x-1, y) # Va para cima
 
-			if(x+1 < self.altura and self.campo[x+1][y]['acessivel'] and self.campo[x+1][y]['cheiroBom'] < self.campo[x][y]['cheiroBom']):
-				self.aplicarCheiroBom(cheiro-0.5, x+1, y, vizitados) # Va para baixo
+			if(x+1 < self.altura and self.campo[x+1][y]['acessivel']):
+				self.aplicarCheiroBom(cheiro-0.5, x+1, y) # Va para baixo
 
-			if(y-1 >= 0 and self.campo[x][y-1]['acessivel'] and self.campo[x][y-1]['cheiroBom'] < self.campo[x][y]['cheiroBom']):
-				self.aplicarCheiroBom(cheiro-0.5, x, y-1, vizitados) # Va para esquerda
+			if(y-1 >= 0 and self.campo[x][y-1]['acessivel']):
+				self.aplicarCheiroBom(cheiro-0.5, x, y-1) # Va para esquerda
 
-			if(y+1 < self.largura and self.campo[x][y+1]['acessivel'] and self.campo[x][y+1]['cheiroBom'] < self.campo[x][y]['cheiroBom']):
-				self.aplicarCheiroBom(cheiro-0.5, x, y+1, vizitados) # Va para direita
+			if(y+1 < self.largura and self.campo[x][y+1]['acessivel']):
+				self.aplicarCheiroBom(cheiro-0.5, x, y+1) # Va para direita
 
-	def aplicarCheiroRuim(self, cheiro, x, y, vizitados=None):
-		if(vizitados == None):
-			vizitados = [False for x in range(self.altura*self.largura)]
-		if(vizitados[x*self.altura+y]): # Não deve repetir os já vizitados
-			return;
-		vizitados[x*self.altura+y] = True # Registrando que vizitou
-
-		conteudo = self.campo[x][y]['conteudo'].split(';')
-		if("E" in [x for x in conteudo]):
-			self.campo[x][y]['cheiroRuim'] = 5.0
-
+	def aplicarCheiroRuim(self, cheiro, x, y):
 		if(cheiro > 0): # Se o cheiro ainda pode ser aplicado
-			if(self.campo[x][y]['cheiroRuim']+cheiro < 5):
-				self.campo[x][y]['cheiroRuim'] = self.campo[x][y]['cheiroRuim'] + cheiro # aplicando cheiro
+			if(self.campo[x][y]['cheiroRuim'] < cheiro):
+				self.campo[x][y]['cheiroRuim'] = cheiro # aplicando cheiro
 
-			if(x-1 >= 0 and self.campo[x-1][y]['acessivel'] and self.campo[x-1][y]['cheiroRuim'] < self.campo[x][y]['cheiroRuim']): # Se ir pra cima for viável
-				self.aplicarCheiroRuim(cheiro-0.5, x-1, y, vizitados) # Va para cima
+			if(x-1 >= 0 and self.campo[x-1][y]['acessivel']): # Se ir pra cima for viável
+				self.aplicarCheiroRuim(cheiro-0.5, x-1, y) # Va para cima
 
-			if(x+1 < self.altura and self.campo[x+1][y]['acessivel'] and self.campo[x+1][y]['cheiroRuim'] < self.campo[x][y]['cheiroRuim']):
-				self.aplicarCheiroRuim(cheiro-0.5, x+1, y, vizitados) # Va para baixo
+			if(x+1 < self.altura and self.campo[x+1][y]['acessivel']):
+				self.aplicarCheiroRuim(cheiro-0.5, x+1, y) # Va para baixo
 
-			if(y-1 >= 0 and self.campo[x][y-1]['acessivel'] and self.campo[x][y-1]['cheiroRuim'] < self.campo[x][y]['cheiroRuim']):
-				self.aplicarCheiroRuim(cheiro-0.5, x, y-1, vizitados) # Va para esquerda
+			if(y-1 >= 0 and self.campo[x][y-1]['acessivel']):
+				self.aplicarCheiroRuim(cheiro-0.5, x, y-1) # Va para esquerda
 
-			if(y+1 < self.largura and self.campo[x][y+1]['acessivel'] and self.campo[x][y+1]['cheiroRuim'] < self.campo[x][y]['cheiroRuim']):
-				self.aplicarCheiroRuim(cheiro-0.5, x, y+1, vizitados) # Va para direita
+			if(y+1 < self.largura and self.campo[x][y+1]['acessivel']):
+				self.aplicarCheiroRuim(cheiro-0.5, x, y+1) # Va para direita
 
 class Player:
 	def __init__(self, nome):
@@ -200,22 +180,29 @@ class Bot:
 			movimentos.append(("right", campo[x][y+1]['cheiroBom']-campo[x][y+1]['cheiroRuim']))
 
 		movimentos = sorted(movimentos, key=lambda x: x[1])
+		if(len(movimentos) == 1):
+			self.setPosAnterior(movimentos[0][0])
+			return movimentos[0][0]
+
 		primeiro = movimentos[-1]
 		segundo = movimentos[-2]
 
-		if(primeiro[0] == self.posAnterior): # Não volte pra posição anterior
+		if(primeiro[1] == segundo[1] and primeiro[0] == self.posAnterior): # Não volte pra posição anterior
 			primeiro, segundo = segundo, primeiro
 
-		if(primeiro[0] == 'up'):
-			self.posAnterior = 'down'
-		if(primeiro[0] == 'down'):
-			self.posAnterior = 'up'
-		if(primeiro[0] == 'left'):
-			self.posAnterior = 'right'
-		if(primeiro[0] == 'right'):
-			self.posAnterior = 'left'
+		self.setPosAnterior(primeiro[0])
 
 		return primeiro[0]
+
+	def setPosAnterior(self, moveAtual):
+		if(moveAtual == 'up'):
+			self.posAnterior = 'down'
+		if(moveAtual == 'down'):
+			self.posAnterior = 'up'
+		if(moveAtual == 'left'):
+			self.posAnterior = 'right'
+		if(moveAtual == 'right'):
+			self.posAnterior = 'left'
 
 	def run(self):
 
