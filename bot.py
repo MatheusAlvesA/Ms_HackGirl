@@ -58,43 +58,51 @@ class Campo:
 			for j in range(0, self.largura):
 				if(self.campo[i][j]['acessivel']): # Está acessível
 					if('C' in self.campo[i][j]['conteudo'].split(";")): # É um código
-						self.aplicarCheiroBom(5.0, i, j)
+						self.aplicarCheiroBom(10.0, i, j)
 					if('E' in [x[0] for x in self.campo[i][j]['conteudo'].split(";")]): # É um bug
 						self.aplicarCheiroRuim(5.0, i, j)
 
-	def aplicarCheiroBom(self, cheiro, x, y):
+	def aplicarCheiroBom(self, cheiro, x, y, vizitados = None):
+		if(vizitados == None):
+			vizitados = [False for x in range(self.altura*self.largura)]
+
 		if(cheiro > 0): # Se o cheiro ainda pode ser aplicado
+			vizitados[x*self.largura+y] = True
 			if(self.campo[x][y]['cheiroBom'] < cheiro):
 				self.campo[x][y]['cheiroBom'] = cheiro # aplicando cheiro
 
-			if(x-1 >= 0 and self.campo[x-1][y]['acessivel']):
-				self.aplicarCheiroBom(cheiro-0.5, x-1, y) # Va para cima
+			if((x-1 >= 0 and self.campo[x-1][y]['acessivel']) and not (vizitados[(x-1)*self.largura+y])):
+				self.aplicarCheiroBom(cheiro-0.5, x-1, y, vizitados) # Va para cima
 
-			if(x+1 < self.altura and self.campo[x+1][y]['acessivel']):
-				self.aplicarCheiroBom(cheiro-0.5, x+1, y) # Va para baixo
+			if(x+1 < self.altura and self.campo[x+1][y]['acessivel'] and not (vizitados[(x+1)*self.largura+y])):
+				self.aplicarCheiroBom(cheiro-0.5, x+1, y, vizitados) # Va para baixo
 
-			if(y-1 >= 0 and self.campo[x][y-1]['acessivel']):
-				self.aplicarCheiroBom(cheiro-0.5, x, y-1) # Va para esquerda
+			if(y-1 >= 0 and self.campo[x][y-1]['acessivel'] and not (vizitados[x*self.largura+(y-1)])):
+				self.aplicarCheiroBom(cheiro-0.5, x, y-1, vizitados) # Va para esquerda
 
-			if(y+1 < self.largura and self.campo[x][y+1]['acessivel']):
-				self.aplicarCheiroBom(cheiro-0.5, x, y+1) # Va para direita
+			if(y+1 < self.largura and self.campo[x][y+1]['acessivel'] and not (vizitados[x*self.largura+(y+1)])):
+				self.aplicarCheiroBom(cheiro-0.5, x, y+1, vizitados) # Va para direita
 
-	def aplicarCheiroRuim(self, cheiro, x, y):
+	def aplicarCheiroRuim(self, cheiro, x, y, vizitados = None):
+		if(vizitados == None):
+			vizitados = [False for x in range(self.altura*self.largura)]
+
 		if(cheiro > 0): # Se o cheiro ainda pode ser aplicado
+			vizitados[x*self.largura+y] = True
 			if(self.campo[x][y]['cheiroRuim'] < cheiro):
 				self.campo[x][y]['cheiroRuim'] = cheiro # aplicando cheiro
 
-			if(x-1 >= 0 and self.campo[x-1][y]['acessivel']): # Se ir pra cima for viável
-				self.aplicarCheiroRuim(cheiro-0.5, x-1, y) # Va para cima
+			if((x-1 >= 0 and self.campo[x-1][y]['acessivel']) and not (vizitados[(x-1)*self.largura+y])):
+				self.aplicarCheiroRuim(cheiro-0.5, x-1, y, vizitados) # Va para cima
 
-			if(x+1 < self.altura and self.campo[x+1][y]['acessivel']):
-				self.aplicarCheiroRuim(cheiro-0.5, x+1, y) # Va para baixo
+			if(x+1 < self.altura and self.campo[x+1][y]['acessivel'] and not (vizitados[(x+1)*self.largura+y])):
+				self.aplicarCheiroRuim(cheiro-0.5, x+1, y, vizitados) # Va para baixo
 
-			if(y-1 >= 0 and self.campo[x][y-1]['acessivel']):
-				self.aplicarCheiroRuim(cheiro-0.5, x, y-1) # Va para esquerda
+			if(y-1 >= 0 and self.campo[x][y-1]['acessivel'] and not (vizitados[x*self.largura+(y-1)])):
+				self.aplicarCheiroRuim(cheiro-0.5, x, y-1, vizitados) # Va para esquerda
 
-			if(y+1 < self.largura and self.campo[x][y+1]['acessivel']):
-				self.aplicarCheiroRuim(cheiro-0.5, x, y+1) # Va para direita
+			if(y+1 < self.largura and self.campo[x][y+1]['acessivel'] and not (vizitados[x*self.largura+(y+1)])):
+				self.aplicarCheiroRuim(cheiro-0.5, x, y+1, vizitados) # Va para direita
 
 class Player:
 	def __init__(self, nome):
@@ -168,16 +176,16 @@ class Bot:
 	def decidirDirecao(self, campo, x, y):
 		movimentos = []
 		if(x-1 >= 0 and campo[x-1][y]['acessivel']):
-			movimentos.append(("up", campo[x-1][y]['cheiroBom']-campo[x-1][y]['cheiroRuim']))
+			movimentos.append(("up", campo[x-1][y]['cheiroBom']-3*campo[x-1][y]['cheiroRuim']))
 
 		if(x+1 < self.field.altura and campo[x+1][y]['acessivel']):
-			movimentos.append(("down", campo[x+1][y]['cheiroBom']-campo[x+1][y]['cheiroRuim']))
+			movimentos.append(("down", campo[x+1][y]['cheiroBom']-3*campo[x+1][y]['cheiroRuim']))
 
 		if(y-1 >= 0 and campo[x][y-1]['acessivel']):
-			movimentos.append(("left", campo[x][y-1]['cheiroBom']-campo[x][y-1]['cheiroRuim']))
+			movimentos.append(("left", campo[x][y-1]['cheiroBom']-3*campo[x][y-1]['cheiroRuim']))
 
 		if(y+1 < self.field.largura and campo[x][y+1]['acessivel']):
-			movimentos.append(("right", campo[x][y+1]['cheiroBom']-campo[x][y+1]['cheiroRuim']))
+			movimentos.append(("right", campo[x][y+1]['cheiroBom']-3*campo[x][y+1]['cheiroRuim']))
 
 		movimentos = sorted(movimentos, key=lambda x: x[1])
 		if(len(movimentos) == 1):
