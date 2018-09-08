@@ -1,9 +1,9 @@
 # Inteligencia artificial, Python, para o jogo MS. HACK-MAN (https://booking.riddles.io/competitions/ms.-hack-man)
 # Matheus Alves de Andrade
 
-# Versão 1.0
+# Versão 2.0
 # Desenvolvimento iniciado em 20/08/2018
-# Versão finalizada em 29/08/2018
+# Versão finalizada em 08/09/2018
 
 class Campo:
 	'''
@@ -35,7 +35,7 @@ class Campo:
 				if(not self.campo[i][j]['acessivel']):
 					arquivo.write("|#.#|")
 				else:
-					arquivo.write("|"+str(self.campo[i][j]['cheiroBom'])+"|")
+					arquivo.write("|"+str(self.campo[i][j]['cheiroRuim'])+"|")
 				
 		arquivo.close()
 
@@ -61,6 +61,9 @@ class Campo:
 						self.aplicarCheiroBom(10.0, i, j)
 					if('E' in [x[0] for x in self.campo[i][j]['conteudo'].split(";")]): # É um bug
 						self.aplicarCheiroRuim(5.0, i, j)
+					minas = [x for x in self.campo[i][j]['conteudo'].split(";") if x[0] == 'B' and len(x) > 1]
+					if(len(minas) > 0): # É uma mina armada
+						self.aplicarCheiroMina(i,j)
 
 	def aplicarCheiroBom(self, cheiro, x, y, vizitados = None):
 		if(vizitados == None):
@@ -71,16 +74,16 @@ class Campo:
 			if(self.campo[x][y]['cheiroBom'] < cheiro):
 				self.campo[x][y]['cheiroBom'] = cheiro # aplicando cheiro
 
-			if((x-1 >= 0 and self.campo[x-1][y]['acessivel']) and not (vizitados[(x-1)*self.largura+y])):
+			if((x-1 >= 0 and self.campo[x-1][y]['acessivel']) and (not vizitados[(x-1)*self.largura+y] or self.campo[x-1][y]['cheiroBom'] < cheiro)):
 				self.aplicarCheiroBom(cheiro-0.5, x-1, y, vizitados) # Va para cima
 
-			if(x+1 < self.altura and self.campo[x+1][y]['acessivel'] and not (vizitados[(x+1)*self.largura+y])):
+			if(x+1 < self.altura and self.campo[x+1][y]['acessivel'] and (not vizitados[(x+1)*self.largura+y] or self.campo[x+1][y]['cheiroBom'] < cheiro)):
 				self.aplicarCheiroBom(cheiro-0.5, x+1, y, vizitados) # Va para baixo
 
-			if(y-1 >= 0 and self.campo[x][y-1]['acessivel'] and not (vizitados[x*self.largura+(y-1)])):
+			if(y-1 >= 0 and self.campo[x][y-1]['acessivel'] and (not vizitados[x*self.largura+y-1] or self.campo[x][y-1]['cheiroBom'] < cheiro)):
 				self.aplicarCheiroBom(cheiro-0.5, x, y-1, vizitados) # Va para esquerda
 
-			if(y+1 < self.largura and self.campo[x][y+1]['acessivel'] and not (vizitados[x*self.largura+(y+1)])):
+			if(y+1 < self.largura and self.campo[x][y+1]['acessivel'] and (not vizitados[x*self.largura+y+1] or self.campo[x][y+1]['cheiroBom'] < cheiro)):
 				self.aplicarCheiroBom(cheiro-0.5, x, y+1, vizitados) # Va para direita
 
 	def aplicarCheiroRuim(self, cheiro, x, y, vizitados = None):
@@ -92,17 +95,33 @@ class Campo:
 			if(self.campo[x][y]['cheiroRuim'] < cheiro):
 				self.campo[x][y]['cheiroRuim'] = cheiro # aplicando cheiro
 
-			if((x-1 >= 0 and self.campo[x-1][y]['acessivel']) and not (vizitados[(x-1)*self.largura+y])):
+			if((x-1 >= 0 and self.campo[x-1][y]['acessivel']) and (not vizitados[(x-1)*self.largura+y] or self.campo[x-1][y]['cheiroRuim'] < cheiro)):
 				self.aplicarCheiroRuim(cheiro-0.5, x-1, y, vizitados) # Va para cima
 
-			if(x+1 < self.altura and self.campo[x+1][y]['acessivel'] and not (vizitados[(x+1)*self.largura+y])):
+			if(x+1 < self.altura and self.campo[x+1][y]['acessivel'] and (not vizitados[(x+1)*self.largura+y] or self.campo[x+1][y]['cheiroRuim'] < cheiro)):
 				self.aplicarCheiroRuim(cheiro-0.5, x+1, y, vizitados) # Va para baixo
 
-			if(y-1 >= 0 and self.campo[x][y-1]['acessivel'] and not (vizitados[x*self.largura+(y-1)])):
+			if(y-1 >= 0 and self.campo[x][y-1]['acessivel'] and (not vizitados[x*self.largura+y-1] or self.campo[x][y-1]['cheiroRuim'] < cheiro)):
 				self.aplicarCheiroRuim(cheiro-0.5, x, y-1, vizitados) # Va para esquerda
 
-			if(y+1 < self.largura and self.campo[x][y+1]['acessivel'] and not (vizitados[x*self.largura+(y+1)])):
+			if(y+1 < self.largura and self.campo[x][y+1]['acessivel'] and (not vizitados[x*self.largura+y+1] or self.campo[x][y+1]['cheiroRuim'] < cheiro)):
 				self.aplicarCheiroRuim(cheiro-0.5, x, y+1, vizitados) # Va para direita
+
+	def aplicarCheiroMina(self, x, y, casas = 5, last = None):
+		if(casas >= 0): # Se o cheiro ainda pode ser aplicado
+			self.campo[x][y]['cheiroRuim'] = 100 # aplicando cheiro
+
+			if(x-1 >= 0 and self.campo[x-1][y]['acessivel'] and (last == 'd' or last == None)):
+				self.aplicarCheiroMina(x-1, y, casas-1, 'd') # Va para cima
+
+			if(x+1 < self.altura and self.campo[x+1][y]['acessivel'] and (last == 'u' or last == None)):
+				self.aplicarCheiroMina(x+1, y, casas-1, 'u') # Va para baixo
+
+			if(y-1 >= 0 and self.campo[x][y-1]['acessivel'] and (last == 'r' or last == None)):
+				self.aplicarCheiroMina(x, y-1, casas-1, 'r') # Va para esquerda
+
+			if(y+1 < self.largura and self.campo[x][y+1]['acessivel'] and (last == 'l' or last == None)):
+				self.aplicarCheiroMina(x, y+1, casas-1, 'l') # Va para direita
 
 class Player:
 	def __init__(self, nome):
@@ -113,7 +132,7 @@ class Player:
 	def set(self, attr_name, value):
 		if attr_name == "snippets":
 			self.snippets = int(value)
-		elif attr_name == "mines":
+		elif attr_name == "bombs":
 			self.mines = int(value)
 
 class Bot:
@@ -123,6 +142,7 @@ class Bot:
 		self.me = None
 		self.round = 0
 		self.posAnterior = None
+		self.droparAgora = False
 
 	def settings(self, args):
 		'''
@@ -169,7 +189,11 @@ class Bot:
 		'''
 		if args[0] == "move": # A Engine solicitou um movimento
 			x, y = self.minhaPosicao()
-			print ( self.decidirDirecao(self.field.campo, x, y) )
+			direcao = self.decidirDirecao(self.field.campo, x, y)
+			if(self.droparAgora):
+				direcao = direcao + ";drop_bomb 5"
+				self.droparAgora = False
+			print ( direcao )
 		else: # A engine está solicitando que caractere pretendemos jogar
 			print("bixiette") # Selecionando
 
@@ -177,15 +201,23 @@ class Bot:
 		movimentos = []
 		if(x-1 >= 0 and campo[x-1][y]['acessivel']):
 			movimentos.append(("up", campo[x-1][y]['cheiroBom']-3*campo[x-1][y]['cheiroRuim']))
+			if('C' in campo[x-1][y]['conteudo'].split(";") and self.me.mines > 0):
+				self.droparAgora = True
 
 		if(x+1 < self.field.altura and campo[x+1][y]['acessivel']):
 			movimentos.append(("down", campo[x+1][y]['cheiroBom']-3*campo[x+1][y]['cheiroRuim']))
+			if('C' in campo[x+1][y]['conteudo'].split(";") and self.me.mines > 0):
+				self.droparAgora = True
 
 		if(y-1 >= 0 and campo[x][y-1]['acessivel']):
 			movimentos.append(("left", campo[x][y-1]['cheiroBom']-3*campo[x][y-1]['cheiroRuim']))
+			if('C' in campo[x][y-1]['conteudo'].split(";") and self.me.mines > 0):
+				self.droparAgora = True
 
 		if(y+1 < self.field.largura and campo[x][y+1]['acessivel']):
 			movimentos.append(("right", campo[x][y+1]['cheiroBom']-3*campo[x][y+1]['cheiroRuim']))
+			if('C' in campo[x][y+1]['conteudo'].split(";") and self.me.mines > 0):
+				self.droparAgora = True
 
 		movimentos = sorted(movimentos, key=lambda x: x[1])
 		if(len(movimentos) == 1):
